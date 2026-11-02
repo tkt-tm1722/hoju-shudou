@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>補充伝票取り込み（手動）/ 金子さん</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { overflow-x: hidden; position: relative; width: 100%; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 10px; background-color: #f1f5f9; color: #1e293b; font-size: 14px; }
+        button, input, select, .filter-toggle, .filter-item, .btn-category, .btn-calc { touch-action: manipulation !important; -webkit-user-select: none; user-select: none; }
+        input, select, textarea { font-size: 16px !important; }
+        
+        .container { max-width: 650px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); width: 100%; }
+        h1 { text-align: center; font-size: 19px; color: #0f172a; margin: 5px 0 15px 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; }
+        
+        .meta-input-group { background: #fdfefe; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; display: flex; flex-direction: column; }
+        .meta-row-date { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 12px; font-size: 14px; width: 100%; }
+        .meta-row-date label { font-weight: bold; color: #64748b; margin-right: 5px; }
+        .meta-row-date input { width: 140px; padding: 5px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; background-color: #f8fafc; }
+        .meta-row-center { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; font-size: 14px; width: 100%; }
+        .meta-row-center:last-child { margin-bottom: 0; }
+        .meta-row-center label { font-weight: bold; color: #334155; margin-right: 8px; width: 80px; text-align: right; }
+        .meta-row-center select, .meta-row-center input { width: 220px; padding: 6px 8px; border: 2px solid #cbd5e1; border-radius: 6px; background-color: white; font-weight: bold; }
+        .meta-row-center input:disabled { background-color: #e2e8f0; color: #64748b; border-color: #cbd5e1; }
+
+        .save-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-save { background-color: #f59e0b; color: white; padding: 10px; font-size: 13px; font-weight: bold; border: none; border-radius: 6px; flex: 1; cursor: pointer; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-clear { background-color: #64748b; color: white; padding: 10px; font-size: 13px; font-weight: bold; border: none; border-radius: 6px; flex: 1; cursor: pointer; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        .btn-location-complete { background-color: #2563eb; color: white; width: 100%; margin: 15px 0 10px 0; padding: 14px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2); text-align: center; }
+        .btn-location-complete:active { background-color: #1d4ed8; }
+
+        .filter-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; padding: 8px 12px; }
+        .filter-toggle { font-size: 13px; font-weight: bold; color: #2563eb; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .filter-options { display: none; flex-direction: column; gap: 10px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1; }
+        .filter-group-box { background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; }
+        .filter-group-label { font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 6px; padding-bottom: 2px; border-bottom: 1px solid #f1f5f9; }
+        .filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        @media (max-width: 480px) { .filter-grid { grid-template-columns: repeat(2, 1fr); } }
+        .filter-item { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: bold; color: #475569; cursor: pointer; padding: 4px 2px; }
+        .filter-item input { transform: scale(1.2); cursor: pointer; }
+
+        .section-title { font-size: 14px; font-weight: bold; color: #1e3a8a; margin: 15px 0 8px 0; padding-left: 6px; border-left: 4px solid #2563eb; }
+        .group-container { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+        .group-container.hidden-group { display: none !important; }
+        .group-label { font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 6px; }
+        .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        @media (max-width: 480px) { .category-grid { grid-template-columns: repeat(3, 1fr); } }
+        .btn-category { background: white; border: 2px solid #cbd5e1; border-radius: 6px; padding: 10px 2px; font-size: 13px; font-weight: bold; color: #475569; cursor: pointer; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .btn-category.selected { background: #e0f2fe; border-color: #0284c7; color: #0369a1; box-shadow: 0 0 0 2px rgba(3,105,161,0.2); }
+        .btn-category.hidden-item { display: none !important; }
+
+        .grp-carddas .btn-category.selected { background: #fef2f2; border-color: #ef4444; color: #b91c1c; }
+        .grp-capsule .btn-category.selected { background: #f0fdf4; border-color: #22c55e; color: #15803d; }
+        .grp-vag .btn-category.selected { background: #fdf2ff; border-color: #d946ef; color: #a21caf; }
+        .grp-cardgame .btn-category.selected { background: #fffbeb; border-color: #f59e0b; color: #b45309; }
+
+        .calc-display { background: #1e293b; color: #38bdf8; font-size: 24px; font-weight: bold; text-align: right; padding: 12px; border-radius: 6px; margin-bottom: 10px; min-height: 52px; font-family: monospace; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 15px; }
+        .btn-calc { background: white; border: 1px solid #d1d5db; border-radius: 6px; padding: 14px 0; font-size: 18px; font-weight: bold; color: #1f2937; cursor: pointer; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn-calc:active { background: #f3f4f6; }
+        .btn-calc.action { color: #d97706; background: #fffbeb; border-color: #fde68a; }
+        .btn-calc.lot { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; font-size: 16px; width: 100%; height: 100%; }
+        .btn-calc.lot:active { background: #dbeafe; }
+        .btn-calc.ok { grid-row: span 2; display: flex; align-items: center; justify-content: center; background: #ef4444; color: white; border-color: #dc2626; font-size: 18px; }
+        .btn-calc.ok:active { background: #dc2626; }
+        .lot-container { grid-column: span 4; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+
+        .shortcut-category-container { background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 8px; padding: 8px; margin-top: 5px; margin-bottom: 5px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .btn-shortcut-cat { background: white; border: 2px solid #cbd5e1; border-radius: 6px; padding: 10px 2px; font-size: 13px; font-weight: bold; color: #475569; cursor: pointer; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn-shortcut-cat.selected { background: #f0fdf4; border-color: #22c55e; color: #15803d; box-shadow: 0 0 0 2px rgba(21,128,61,0.2); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 12px; background: white; table-layout: fixed; }
+        th, td { border: 1px solid #cbd5e1; padding: 6px 2px; text-align: center; word-break: break-all; overflow: hidden; text-overflow: ellipsis; }
+        th { background-color: #475569; color: white; font-size: 11px; }
+        .log-box { max-height: 250px; overflow-y: auto; overflow-x: hidden; border: 2px solid #cbd5e1; padding: 4px; background: #fafafa; border-radius: 8px; margin-top: 5px; width: 100%; }
+        .btn-delete { background-color: #ef4444; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        
+        .completed-section { background: #f0fdf4; border: 2px dashed #22c55e; border-radius: 10px; padding: 12px; margin-top: 15px; width: 100%; }
+        .completed-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .btn-completed-loc { background: white; border: 1px solid #bbf7d0; border-radius: 20px; padding: 8px 14px; font-size: 12px; font-weight: bold; color: #166534; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 4px; }
+        .btn-completed-loc:active { background: #dcfce7; }
+
+        /* ▼ 変更点：送信ボタン色合い調整 */
+        .btn-submit-main { background-color: #10b981; color: white; width: 100%; margin-top: 20px; padding: 14px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(16,185,129,0.2); }
+        .btn-submit-main:disabled { background-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+        .btn-all-clear { background-color: #ef4444; color: white; width: 100%; margin-top: 10px; padding: 10px; font-size: 13px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; text-align: center; opacity: 0.8; }
+
+        .history-section { margin-top: 35px; border-top: 3px dashed #cbd5e1; padding-top: 20px; }
+        .history-title { font-size: 15px; font-weight: bold; color: #0f172a; margin-bottom: 12px; }
+        .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; padding-right: 4px; margin-bottom: 12px; }
+        .history-row-item { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; cursor: pointer; gap: 8px; transition: all 0.2s; }
+        .history-row-item.active { background: #1e293b; border-color: #1e293b; color: white; }
+        .history-row-item.active .history-item-label { color: #f8fafc; }
+        .history-row-item.active .history-item-sub { color: #cbd5e1; }
+        .history-item-text { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+        .history-item-label { font-weight: bold; color: #1f2937; }
+        .history-item-sub { color: #64748b; font-size: 11px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+        .btn-history-del { background-color: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; height: 28px; display: flex; align-items: center; justify-content: center; z-index: 10; }
+        .history-empty { text-align: center; color: #94a3b8; padding: 25px; background: #fafafa; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 13px; }
+
+        /* ▼ 変更点：モーダル（確認ポップアップ）用のスタイル */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
+        .modal-content { background: white; width: 100%; max-width: 500px; max-height: 85vh; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-header { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #0f172a; text-align: center; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; }
+        .modal-body { flex: 1; overflow-y: auto; font-size: 13px; line-height: 1.5; color: #334155; margin-bottom: 15px; padding-right: 5px; }
+        .modal-footer { margin-top: auto; }
+        .modal-alert-text { font-weight: bold; color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; }
+        .modal-buttons { display: flex; gap: 10px; }
+        .btn-modal-submit { background-color: #2563eb; color: white; padding: 12px; border-radius: 8px; flex: 1; border: none; font-weight: bold; font-size: 15px; cursor: pointer; }
+        .btn-modal-cancel { background-color: #64748b; color: white; padding: 12px; border-radius: 8px; flex: 1; border: none; font-weight: bold; font-size: 15px; cursor: pointer; }
+        .btn-modal-submit:disabled { background-color: #94a3b8; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>補充伝票取り込み（手動）/ 金子さん</h1>
+
+    <div class="meta-input-group">
+        <div class="meta-row-date">
+            <label for="inputDate">📅 日付:</label>
+            <input type="date" id="inputDate">
+        </div>
+        <div class="meta-row-center">
+            <label for="inputLocation">📍 登録地:</label>
+            <select id="inputLocation" onchange="onChangeLocation()">
+               <option value="丸広百貨店入間">丸広百貨店入間</option>
+　　　　　　　　　<option value="狭山市立博物館">狭山市立博物館</option>
+　　　　　　　　　<option value="いるまの湯">いるまの湯</option>
+               <option value="株式会社ムーミン物語">株式会社ムーミン物語</option>
+               <option value="くら寿司 入間">くら寿司 入間</option>
+               <option value="ベイシア　ひだかモール店">ベイシア　ひだかモール店</option>
+               <option value="ﾍﾞｲｼｱ 深谷国済寺">ﾍﾞｲｼｱ 深谷国済寺</option>
+               <option value="ﾍﾞｲｼｱ 青梅ｲﾝﾀｰ">ﾍﾞｲｼｱ 青梅ｲﾝﾀｰ</option>
+               <option value="ﾍﾞｲｼｱﾀｳﾝ新狭山">ﾍﾞｲｼｱﾀｳﾝ新狭山</option>
+               <option value="ｺｺﾄｸふかや花園">ｺｺﾄｸふかや花園</option>
+               <option value="ｶｲﾝｽﾞ 鶴ヶ島">ｶｲﾝｽﾞ 鶴ヶ島</option>
+               <option value="ｶｲﾝｽﾞ 青梅ｲﾝﾀｰ">ｶｲﾝｽﾞ 青梅ｲﾝﾀｰ</option>
+               <option value="ｲｵﾝ 入間">ｲｵﾝ 入間</option>
+               <option value="WonderGOO 入間">WonderGOO 入間</option>
+            </select>
+        </div>
+        <div class="meta-row-center">
+            <label for="inputWorker">👤 作業者:</label>
+            <input type="text" id="inputWorker" value="金子(000047)" disabled>
+        </div>
+    </div>
+
+    <div class="save-group">
+        <button id="saveBtn" class="btn-save">💾 バックアップ保存</button>
+        <button id="clearBtn" class="btn-clear">🗑️ 今の画面をクリア</button>
+    </div>
+
+    <div class="filter-card">
+        <div class="filter-toggle" onclick="toggleFilterOptions()">
+            <span>🔍 表示するカテゴリーを選択（展開）</span>
+            <span id="filterArrow">▼</span>
+        </div>
+        <div class="filter-options" id="filterOptions"></div>
+    </div>
+
+    <div class="section-title">① カテゴリーを選択</div>
+    <div id="container-carddas" class="group-container grp-carddas"><div class="group-label">ーー カードダス ーー</div><div class="category-grid" id="grid-carddas"></div></div>
+    <div id="container-capsule" class="group-container grp-capsule"><div class="group-label">ーー カプセル ーー</div><div class="category-grid" id="grid-capsule"></div></div>
+    <div id="container-vag" class="group-container grp-vag"><div class="group-label">ーー VAG ーー</div><div class="category-grid" id="grid-vag"></div></div>
+    <div id="container-cardgame" class="group-container grp-cardgame"><div class="group-label">ーー カードゲーム ーー</div><div class="category-grid" id="grid-cardgame"></div></div>
+
+    <div class="section-title">② 補充数を入力して「OK」で確定</div>
+    <div id="calcDisplay" class="calc-display">カテゴリーを選んでください</div>
+
+    <div class="calc-grid">
+        <button class="btn-calc" onclick="pressNum('7')">7</button>
+        <button class="btn-calc" onclick="pressNum('8')">8</button>
+        <button class="btn-calc" onclick="pressNum('9')">9</button>
+        <button class="btn-calc action" onclick="pressAction('AC')">AC</button>
+        <button class="btn-calc" onclick="pressNum('4')">4</button>
+        <button class="btn-calc" onclick="pressNum('5')">5</button>
+        <button class="btn-calc" onclick="pressNum('6')">6</button>
+        <button class="btn-calc action" onclick="pressAction('Del')">Del</button>
+        <button class="btn-calc" onclick="pressNum('1')">1</button>
+        <button class="btn-calc" onclick="pressNum('2')">2</button>
+        <button class="btn-calc" onclick="pressNum('3')">3</button>
+        <button class="btn-calc ok" onclick="pressAction('OK')">OK確定</button>
+        <button class="btn-calc" style="grid-column: span 2;" onclick="pressNum('0')">0</button>
+        <button class="btn-calc action" style="font-size: 22px;" onclick="toggleMinus()">ー</button>
+        <div class="lot-container">
+            <button class="btn-calc lot" onclick="pressLot('20')">20</button>
+            <button class="btn-calc lot" onclick="pressLot('30')">30</button>
+            <button class="btn-calc lot" onclick="pressLot('40')">40</button>
+        </div>
+    </div>
+
+    <div class="shortcut-category-container">
+        <button id="shortcut-cat-m3" class="btn-shortcut-cat" onclick="selectCategory('m3')">カプセル300</button>
+        <button id="shortcut-cat-m4" class="btn-shortcut-cat" onclick="selectCategory('m4')">カプセル400</button>
+        <button id="shortcut-cat-m5" class="btn-shortcut-cat" onclick="selectCategory('m5')">カプセル500</button>
+    </div>
+
+    <button id="locCompleteBtn" class="btn-location-complete" onclick="completeCurrentLocation()">➔ この登録地での集計を完了する</button>
+
+    <h3 style="font-size: 14px; margin-bottom: 5px; margin-top: 15px; color:#1e293b;">📋 現在の登録地のデータ一覧</h3>
+    <div class="log-box">
+        <table>
+            <thead>
+                 <tr>
+                    <th style="width: 40%;">カテゴリー</th><th style="width: 23%;">補充</th><th style="width: 23%;">引取</th><th style="width:  14%;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="dataTable"></tbody>
+        </table>
+    </div>
+
+    <div class="completed-section">
+        <div style="font-size: 13px; font-weight: bold; color: #166534;">✅ 入力完了済みの登録地（タップで復元・修正）</div>
+        <div class="completed-list" id="completedLocList"></div>
+    </div>
+
+    <!-- ▼ 変更点：送信ボタンへ変更 -->
+    <button id="submitBtn" class="btn-submit-main" onclick="openConfirmModal()" disabled>📤 スプレッドシートへデータを送信</button>
+    <button id="allClearBtn" class="btn-all-clear" onclick="clearAllData()">⚠️ 入力データをクリア（初期化）</button>
+
+    <div class="history-section">
+        <div class="history-title">📋 過去1週間の送信履歴 (確認用)</div>
+        <div id="historyTabs" class="history-list"></div>
+        
+        <div class="log-box" id="historyContentArea" style="display: none; max-height: 280px; background: #fafafa; border: 2px solid #cbd5e1; margin-top: 10px;">
+            <div id="historyMetaTitle" style="font-size: 12px; font-weight: bold; padding: 4px; color: #1e293b; border-bottom: 1px dashed #cbd5e1; margin-bottom: 5px;"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">カテゴリー</th><th style="width: 25%;">補充</th><th style="width: 25%;">引取</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+            </table>
+        </div>
+        <div id="historyEmpty" class="history-empty">過去1週間の送信履歴はまだありません</div>
+    </div>
+</div>
+
+<!-- ▼ 変更点：最終確認用ポップアップ（モーダル） -->
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">📋 送信データ一覧（最終確認）</div>
+        <div class="modal-body" id="modalDataList">
+            <!-- ここに各拠点・各カテゴリの合算データが入ります -->
+        </div>
+        <div class="modal-footer">
+            <div class="modal-alert-text">この内容でスプレッドシートへ送信しますか？</div>
+            <div class="modal-buttons">
+                <button class="btn-modal-cancel" onclick="closeConfirmModal()">キャンセル</button>
+                <button id="btnModalSubmit" class="btn-modal-submit" onclick="submitDataToGAS()">🚀 送信する</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // ⚠️ ここにGASで発行したURLを貼り付けてください
+    // ==========================================
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzz7qqR8My5_CBWYG_GQ_vM6pWXQsisRObas6X8xr5vd1wGiKEE8k3sHIA5Vy_CO3NM/exec";
+
+    document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) { e.preventDefault(); } }, { passive: false });
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => { const now = (new Date()).getTime(); if (now - lastTouchEnd <= 300) { e.preventDefault(); } lastTouchEnd = now; }, false);
+
+    const locationMaster = {
+        "丸広百貨店入間": "002036",
+        "狭山市立博物館": "003557",
+        "いるまの湯": "004852",
+        "株式会社ムーミン物語": "005057",
+        "くら寿司 入間": "012659",
+        "ベイシア　ひだかモール店": "020341",
+        "ﾍﾞｲｼｱ 深谷国済寺": "020367",
+        "ﾍﾞｲｼｱ 青梅ｲﾝﾀｰ": "020373",
+        "ﾍﾞｲｼｱﾀｳﾝ新狭山": "020606",
+        "ｺｺﾄｸふかや花園": "020387",
+        "ｶｲﾝｽﾞ 鶴ヶ島": "021284",
+        "ｶｲﾝｽﾞ 青梅ｲﾝﾀｰ": "021296",
+        "ｲｵﾝ 入間": "080003",
+        "WonderGOO 入間": "087059"
+
+    };
+
+    const categoryMaster = [
+        { id: "c1", name: "ｶｰﾄﾞﾀﾞｽ100", csvName: "ｶｰﾄﾞﾀﾞｽ100", group: "carddas" }, { id: "c2", name: "ｶｰﾄﾞﾀﾞｽ200", csvName: "ｶｰﾄﾞﾀﾞｽ200", group: "carddas" },
+        { id: "c3", name: "ｶｰﾄﾞﾀﾞｽ300", csvName: "ｶｰﾄﾞﾀﾞｽ300", group: "carddas" }, { id: "c4", name: "Jカード100", csvName: "ｼﾞｬﾝﾎﾞｶｰﾄﾞﾀﾞｽ100", group: "carddas" },
+        { id: "c5", name: "Jカード200", csvName: "ｼﾞｬﾝﾎﾞｶｰﾄﾞﾀﾞｽ200", group: "carddas" }, { id: "c6", name: "Jカード300", csvName: "ｼﾞｬﾝﾎﾞｶｰﾄﾞﾀﾞｽ300", group: "carddas" },
+        { id: "m1", name: "ｶﾌﾟｾﾙ100", csvName: "ｶﾌﾟｾﾙ100/", group: "capsule" }, { id: "m2", name: "ｶﾌﾟｾﾙ200", csvName: "ｶﾌﾟｾﾙ200/ﾌﾟﾁｺﾛ200", group: "capsule" },
+        { id: "m3", name: "ｶﾌﾟｾﾙ300", csvName: "ｶﾌﾟｾﾙ300", group: "capsule" }, { id: "m4", name: "ｶﾌﾟｾﾙ400", csvName: "ｶﾌﾟｾﾙ400", group: "capsule" },
+        { id: "m5", name: "ｶﾌﾟｾﾙ500", csvName: "ｶﾌﾟｾﾙ500", group: "capsule" }, { id: "m6", name: "ｶﾌﾟｾﾙ600", csvName: "ｶﾌﾟｾﾙ100/600", group: "capsule" },
+        { id: "m7", name: "ｶﾌﾟｾﾙ800", csvName: "ｶﾌﾟｾﾙ100/800", group: "capsule" }, { id: "m8", name: "ｶﾌﾟｾﾙ1000", csvName: "ｶﾌﾟｾﾙ100/1000", group: "capsule" },
+        { id: "m9", name: "ｶﾌﾟｾﾙ1500", csvName: "ｶﾌﾟｾﾙ100/1500", group: "capsule" }, { id: "m10", name: "ｶﾌﾟｾﾙ2000", csvName: "ｶﾌﾟｾﾙ100/2000", group: "capsule" },
+        { id: "v1", name: "VAGｶﾌﾟｾﾙ500", csvName: "VAGｶﾌﾟｾﾙ500", group: "vag" }, { id: "g1", name: "おねがいｱｲﾌﾟﾘ", csvName: "ﾍﾟﾆｨ/ﾋﾐﾂﾉｱｲﾌﾟﾘ-ｱｲﾌﾟﾘｶｰﾄﾞ", group: "cardgame" },
+        { id: "g2", name: "ｱｲﾌﾟﾘﾊﾞｰｽ", csvName: "ﾍﾟﾆｨ/ｱｲﾌﾟﾘﾊﾞｰｽｰｱｲﾌﾟﾘｲﾝｸ", group: "cardgame" }, { id: "g3", name: "ﾌﾚﾝﾀﾞ", csvName: "ﾍﾟﾆｨ/ﾎﾟｹﾓﾝﾌﾚﾝﾀﾞ", group: "cardgame" },
+        { id: "g4", name: "ﾌﾚﾝﾀﾞ(ﾄﾚｰﾅｰ)", csvName: "ﾍﾟﾆｲ/ﾎﾟｹﾓﾝﾌﾚﾝﾀﾞ(ﾄﾚｰﾅｰ)", group: "cardgame" }
+    ];
+
+    const groupNames = { carddas: "ーー カードダス ーー", capsule: "ーー カプセル ーー", vag: "ーー VAG ーー", cardgame: "ーー カードゲーム ーー" };
+
+    let dataList = []; let allLocationsData = {}; let selectedCategoryId = null; let currentCountStr = ""; let visibleCategories = {};
+    const calcDisplay = document.getElementById('calcDisplay');
+    const dataTable = document.getElementById('dataTable');
+    const submitBtn = document.getElementById('submitBtn');
+    const completedLocList = document.getElementById('completedLocList');
+    let currentSelectedHistoryId = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const today = new Date();
+        document.getElementById('inputDate').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        const savedData = localStorage.getItem('hojuu_hand_data_fukasawa');
+        const savedAllData = localStorage.getItem('hojuu_all_locations_data_fukasawa');
+        const savedLocation = localStorage.getItem('hojuu_hand_location_fukasawa');
+        const savedDate = localStorage.getItem('hojuu_hand_date_fukasawa');
+        const savedFilter = localStorage.getItem('hojuu_visible_categories_fukasawa');
+
+        if (savedData) dataList = JSON.parse(savedData);
+        if (savedAllData) allLocationsData = JSON.parse(savedAllData);
+        if (savedLocation && locationMaster[savedLocation]) document.getElementById('inputLocation').value = savedLocation;
+        if (savedDate) document.getElementById('inputDate').value = savedDate;
+        if (savedFilter) { visibleCategories = JSON.parse(savedFilter); } else { categoryMaster.forEach(c => { visibleCategories[c.id] = true; }); }
+
+        renderCategoryButtons(); renderFilterOptions(); checkGroupVisibility(); renderTable(); renderCompletedLocations(); updateDisplay(); renderHistoryTabs();
+    });
+
+    // 既存UI制御関数（変更なし部分）
+    function renderCategoryButtons() {
+        const groups = { carddas: "grid-carddas", capsule: "grid-capsule", vag: "grid-vag", cardgame: "grid-cardgame" };
+        Object.values(groups).forEach(id => document.getElementById(id).innerHTML = "");
+        categoryMaster.forEach(c => {
+            const isHidden = visibleCategories[c.id] ? "" : "hidden-item";
+            const btnHtml = `<button id="btn-cat-${c.id}" class="btn-category ${isHidden}" onclick="selectCategory('${c.id}')">${c.name}</button>`;
+            document.getElementById(groups[c.group]).insertAdjacentHTML('beforeend', btnHtml);
+        });
+        updateShortcutButtonStyles();
+    }
+    function renderFilterOptions() {
+        const container = document.getElementById('filterOptions'); container.innerHTML = "";
+        ["carddas", "capsule", "vag", "cardgame"].forEach(grp => {
+            const grpItems = categoryMaster.filter(c => c.group === grp); if(grpItems.length === 0) return;
+            let html = `<div class="filter-group-box"><div class="filter-group-label">${groupNames[grp]}</div><div class="filter-grid">`;
+            grpItems.forEach(c => { html += `<label class="filter-item"><input type="checkbox" id="filter-chk-${c.id}" ${visibleCategories[c.id] ? "checked" : ""} onchange="onToggleCategoryFilter('${c.id}')"><span>${c.name}</span></label>`; });
+            container.insertAdjacentHTML('beforeend', html + `</div></div>`);
+        });
+    }
+    function toggleFilterOptions() {
+        const opts = document.getElementById('filterOptions'); const arrow = document.getElementById('filterArrow');
+        if (opts.style.display === 'flex') { opts.style.display = 'none'; arrow.innerText = '▼'; } else { opts.style.display = 'flex'; arrow.innerText = '▲'; }
+    }
+    function onToggleCategoryFilter(id) {
+        visibleCategories[id] = document.getElementById(`filter-chk-${id}`).checked;
+        localStorage.setItem('hojuu_visible_categories_fukasawa', JSON.stringify(visibleCategories));
+        const btn = document.getElementById(`btn-cat-${id}`);
+        if (visibleCategories[id]) { btn.classList.remove('hidden-item'); } else {
+            btn.classList.add('hidden-item');
+            if (selectedCategoryId === id) { selectedCategoryId = null; currentCountStr = ""; btn.classList.remove('selected'); updateDisplay(); }
+        }
+        checkGroupVisibility();
+    }
+    function checkGroupVisibility() {
+        ["carddas", "capsule", "vag", "cardgame"].forEach(grp => {
+            const hasVisibleItem = categoryMaster.filter(c => c.group === grp).some(c => visibleCategories[c.id] === true);
+            const container = document.getElementById(`container-${grp}`);
+            if (hasVisibleItem) { container.classList.remove('hidden-group'); } else { container.classList.add('hidden-group'); }
+        });
+    }
+    function onChangeLocation() { localStorage.setItem('hojuu_hand_location_fukasawa', document.getElementById('inputLocation').value); }
+    function saveToStorage(isManual = false) {
+        localStorage.setItem('hojuu_hand_data_fukasawa', JSON.stringify(dataList));
+        localStorage.setItem('hojuu_all_locations_data_fukasawa', JSON.stringify(allLocationsData));
+        localStorage.setItem('hojuu_hand_location_fukasawa', document.getElementById('inputLocation').value);
+        localStorage.setItem('hojuu_hand_date_fukasawa', document.getElementById('inputDate').value);
+        if (isManual) { playBeep(1000, 0.1); alert("現在の状態を保存しました！"); }
+    }
+    document.getElementById('saveBtn').addEventListener('click', () => saveToStorage(true));
+    document.getElementById('clearBtn').addEventListener('click', () => { if (confirm("現在の画面の入力データをクリアします。よろしいですか？")) { resetCurrentView(); saveToStorage(); } });
+    
+  window.completeCurrentLocation = function() {
+        const loc = document.getElementById('inputLocation').value;
+        if (dataList.length === 0) { alert("現在の登録地にはデータが入力されていません。"); return; }
+        
+        // ▼ 変更点：すでに同じ登録地のデータが存在する場合に確認アラートを出す
+        if (allLocationsData[loc]) {
+            const msg = `⚠️ 一つ前と同様の登録地（${loc}）が選択されています。\n\nすでに完了済みのデータを「上書き」しますか？\n・[OK] ＝ 上書きする\n・[キャンセル] ＝ 登録地を選択し直す`;
+            if (!confirm(msg)) {
+                return; // キャンセルを押した場合はここでストップし、画面を維持する
+            }
+        }
+
+        allLocationsData[loc] = [...dataList];
+        playBeep(1000, 0.3); alert(`【${loc}】のデータをプールしました。次の登録地を選択してください。`);
+        resetCurrentView(); renderCompletedLocations(); saveToStorage();
+    };
+    function renderCompletedLocations() {
+        completedLocList.innerHTML = "";
+        const keys = Object.keys(allLocationsData);
+        if (keys.length === 0) { completedLocList.innerHTML = `<span style="font-size:12px; color:#94a3b8;">完了済みの登録地はまだありません</span>`; updateSubmitButtonState(); return; }
+        keys.forEach(loc => {
+            const btn = document.createElement('button'); btn.className = "btn-completed-loc"; btn.innerHTML = `📍 ${loc} (${allLocationsData[loc].length}件)`;
+            btn.onclick = () => restoreLocationData(loc); completedLocList.appendChild(btn);
+        });
+        updateSubmitButtonState();
+    }
+    function restoreLocationData(loc) {
+        if (dataList.length > 0 && !confirm("入力中のデータがあります。切り替えると今の画面のデータは消えますがよろしいですか？")) return;
+        document.getElementById('inputLocation').value = loc; dataList = [...allLocationsData[loc]]; delete allLocationsData[loc];
+        renderTable(); renderCompletedLocations(); saveToStorage(); playBeep(800, 0.1);
+    }
+    window.clearAllData = function() {
+        if (confirm("⚠️ 警告\n現在入力中のデータ、およびこれまでに完了したすべての登録地データを完全に消去します。本当によろしいですか？")) {
+            dataList = []; allLocationsData = {}; resetCurrentView(); renderCompletedLocations();
+            localStorage.removeItem('hojuu_hand_data_fukasawa'); localStorage.removeItem('hojuu_all_locations_data_fukasawa');
+            playBeep(400, 0.5); alert("集計データを初期化しました。");
+        }
+    };
+    function resetCurrentView() { dataList = []; selectedCategoryId = null; currentCountStr = ""; document.querySelectorAll('.btn-category').forEach(b => b.classList.remove('selected')); renderTable(); updateDisplay(); }
+    function selectCategory(id) { selectedCategoryId = id; document.querySelectorAll('.btn-category').forEach(btn => btn.classList.remove('selected')); const mainBtn = document.getElementById(`btn-cat-${id}`); if(mainBtn) mainBtn.classList.add('selected'); updateShortcutButtonStyles(); if(currentCountStr === "") currentCountStr = "0"; updateDisplay(); playBeep(800, 0.05); }
+    function updateShortcutButtonStyles() { document.querySelectorAll('.btn-shortcut-cat').forEach(b => b.classList.remove('selected')); if (['m3','m4','m5'].includes(selectedCategoryId)) document.getElementById(`shortcut-cat-${selectedCategoryId}`).classList.add('selected'); }
+    function pressNum(num) { if (!selectedCategoryId) { alert("カテゴリーを選択してください！"); return; } let isMinus = currentCountStr.startsWith('-'); let pureNumStr = isMinus ? currentCountStr.slice(1) : currentCountStr; if (pureNumStr === "0") { if (num === "0") return; pureNumStr = num; } else { pureNumStr += num; } currentCountStr = (isMinus ? '-' : '') + pureNumStr; updateDisplay(); playBeep(1200, 0.03); }
+    function pressLot(lotNum) { if (!selectedCategoryId) { alert("カテゴリーを選択してください！"); return; } currentCountStr = (currentCountStr.startsWith('-') ? '-' : '') + lotNum; updateDisplay(); playBeep(1200, 0.05); }
+    function toggleMinus() { if (!selectedCategoryId) { alert("カテゴリーを選択してください！"); return; } if (currentCountStr === "" || currentCountStr === "0") { currentCountStr = "-0"; } else if (currentCountStr.startsWith('-')) { currentCountStr = currentCountStr.slice(1); } else { currentCountStr = '-' + currentCountStr; } updateDisplay(); playBeep(900, 0.05); }
+    function pressAction(action) {
+        if (action === 'AC') { currentCountStr = "0"; playBeep(600, 0.08); } 
+        else if (action === 'Del') { if (currentCountStr.length <= 1 || currentCountStr === "-0") { currentCountStr = "0"; } else { currentCountStr = currentCountStr.slice(0, -1); if (currentCountStr === "-") currentCountStr = "-0"; } playBeep(600, 0.05); } 
+        else if (action === 'OK') {
+            const count = parseInt(currentCountStr, 10);
+            if (!selectedCategoryId) { alert("カテゴリーを選択してください。"); return; }
+            if (isNaN(count) || count === 0) { alert("補充数を入力してください。"); return; }
+            dataList.push({ categoryId: selectedCategoryId, categoryName: categoryMaster.find(c => c.id === selectedCategoryId).name, count: count, timestamp: Date.now() });
+            renderTable(); saveToStorage(); currentCountStr = "0"; playBeep(1000, 0.15);
+        }
+        updateDisplay();
+    }
+    function updateDisplay() {
+        if (!selectedCategoryId) { calcDisplay.innerHTML = `<span style="font-size:14px; color:#64748b;">カテゴリーを選んでください</span>`; } 
+        else { calcDisplay.innerHTML = `<span style="font-size:12px; color:#94a3b8; float:left; max-width:55%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${categoryMaster.find(c => c.id === selectedCategoryId).name} ➔ </span> <span>${currentCountStr || "0"} <span style="font-size:15px; color:#64748b;">個</span></span>`; }
+    }
+    function updateSubmitButtonState() { submitBtn.disabled = !(dataList.length > 0 || Object.keys(allLocationsData).length > 0); }
+    function renderTable() {
+        dataTable.innerHTML = "";
+        categoryMaster.forEach((cat) => {
+            const catItems = dataList.filter(item => item.categoryId === cat.id);
+            if (catItems.length > 0) {
+                const hojuuStr = catItems.filter(i => i.count > 0).map(i => i.count).join(',');
+                const hikitoriStr = catItems.filter(i => i.count < 0).map(i => Math.abs(i.count)).join(',');
+                dataTable.insertAdjacentHTML('beforeend', `<tr><td style="text-align:left; font-weight:bold; padding-left:8px;">${cat.name}</td><td style="font-weight:bold; color:#1e3a8a;">${hojuuStr}</td><td style="font-weight:bold; color:#b91c1c;">${hikitoriStr}</td><td><button class="btn-delete" onclick="deleteLatestCategoryRow('${cat.id}')">削除</button></td></tr>`);
+            }
+        });
+        updateSubmitButtonState();
+    }
+    window.deleteLatestCategoryRow = function(categoryId) { for (let i = dataList.length - 1; i >= 0; i--) { if (dataList[i].categoryId === categoryId) { dataList.splice(i, 1); break; } } renderTable(); saveToStorage(); };
+    function playBeep(freq, duration) { try { const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain(); oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime); gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); oscillator.connect(gainNode); gainNode.connect(audioCtx.destination); oscillator.start(); oscillator.stop(audioCtx.currentTime + duration); } catch(e) {} }
+
+    // ==========================================
+    // ▼ スプレッドシート送信＆ポップアップ関連処理
+    // ==========================================
+    
+    // 現在のデータを集約して一つのオブジェクトにする関数
+    function getAggregatedExportData() {
+        const finalExportData = {};
+        Object.keys(allLocationsData).forEach(loc => { finalExportData[loc] = [...allLocationsData[loc]]; });
+        const currentLoc = document.getElementById('inputLocation').value;
+        if (dataList.length > 0) {
+            if (finalExportData[currentLoc]) { finalExportData[currentLoc] = finalExportData[currentLoc].concat(dataList); } 
+            else { finalExportData[currentLoc] = [...dataList]; }
+        }
+        return finalExportData;
+    }
+
+    // 1. 確認ポップアップを開く
+    window.openConfirmModal = function() {
+        const finalExportData = getAggregatedExportData();
+        if (Object.keys(finalExportData).length === 0) return;
+
+        let html = "";
+        Object.keys(finalExportData).forEach(locName => {
+            html += `<div style="font-weight:bold; margin-top:12px; color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:4px;">📍 ${locName}</div>`;
+            html += `<table style="width:100%; border-collapse:collapse; margin-top:5px; font-size:12px; margin-bottom: 10px;">`;
+            
+            const targetList = finalExportData[locName];
+            
+            // 合算処理
+            const aggregatedData = {};
+            targetList.forEach(item => {
+                if (!aggregatedData[item.categoryId]) { aggregatedData[item.categoryId] = { categoryId: item.categoryId, count: 0 }; }
+                aggregatedData[item.categoryId].count += item.count;
+            });
+
+            // 画面にリスト表示
+            Object.values(aggregatedData).forEach(item => {
+                if(item.count === 0) return;
+                const itemInfo = categoryMaster.find(c => c.id === item.categoryId);
+                const displayName = itemInfo ? itemInfo.name : "不明";
+                html += `<tr>
+                    <td style="text-align:left; padding:6px; border:1px solid #e2e8f0;">${displayName}</td>
+                    <td style="width:60px; text-align:right; padding:6px; font-weight:bold; color:#1e3a8a; border:1px solid #e2e8f0;">${item.count} 個</td>
+                </tr>`;
+            });
+            html += `</table>`;
+        });
+
+        document.getElementById('modalDataList').innerHTML = html;
+        document.getElementById('confirmModal').style.display = 'flex';
+    };
+
+    // 2. モーダルを閉じる
+    window.closeConfirmModal = function() {
+        document.getElementById('confirmModal').style.display = 'none';
+    };
+
+    // 3. 実際にGAS（スプレッドシート）へ送信する
+    window.submitDataToGAS = async function() {
+        if (GAS_URL === "ここにコピーしたURLを貼り付けてください") {
+            alert("⚠️ Google Apps ScriptのURLが設定されていません。\nHTMLコード下部の「GAS_URL」を書き換えてください。");
+            return;
+        }
+
+        const finalExportData = getAggregatedExportData();
+        const rawDate = document.getElementById('inputDate').value;
+        const dateStr = rawDate ? rawDate.replace(/-/g, '') : "日付不明";
+        const workerCodeStr = "000047";
+        const payload = []; // GASに送るデータの配列
+
+        // GAS用にデータを整形
+        Object.keys(finalExportData).forEach(locName => {
+            const customerCode = locationMaster[locName] || "000000";
+            const targetList = finalExportData[locName];
+            
+            const aggregatedData = {};
+            targetList.forEach(item => {
+                if (!aggregatedData[item.categoryId]) { aggregatedData[item.categoryId] = { categoryId: item.categoryId, count: 0 }; }
+                aggregatedData[item.categoryId].count += item.count;
+            });
+
+            Object.values(aggregatedData).forEach(item => {
+                if(item.count === 0) return;
+                const itemInfo = categoryMaster.find(c => c.id === item.categoryId);
+                const csvName = itemInfo ? itemInfo.csvName : "不明";
+                
+                payload.push({
+                    date: dateStr,
+                    locCode: customerCode,
+                    workerCode: workerCodeStr,
+                    category: csvName,
+                    count: item.count
+                });
+            });
+        });
+
+        const btn = document.getElementById('btnModalSubmit');
+        btn.innerText = "⏳ 送信中...";
+        btn.disabled = true;
+
+        try {
+            // スプレッドシートへ送信
+            const response = await fetch(GAS_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain" }, // CORS回避のため必須
+                body: JSON.stringify(payload)
+            });
+
+            playBeep(1000, 0.2);
+            alert("✨ スプレッドシートへの送信が完了しました！");
+            closeConfirmModal();
+            saveDownloadedDataToHistory(rawDate, finalExportData);
+            
+            // 送信完了後はデータをクリアするか確認
+            if(confirm("送信済みのデータをクリアして画面を初期化しますか？")) {
+                clearAllData(true);
+            }
+
+        } catch (error) {
+            alert("❌ 送信に失敗しました。電波の良いところで再度お試しください。\n" + error.message);
+        } finally {
+            btn.innerText = "🚀 送信する";
+            btn.disabled = false;
+        }
+    };
+
+    // 履歴管理関連
+    function saveDownloadedDataToHistory(rawDate, exportData) {
+        let history = JSON.parse(localStorage.getItem('hojuu_download_history_fukasawa') || '[]');
+        const locKeys = Object.keys(exportData); if (locKeys.length === 0) return;
+        const allLocsStr = locKeys.join('、');
+        const newRecord = { id: Date.now(), dateVal: rawDate, locLabel: allLocsStr, timestamp: new Date().getTime(), details: exportData };
+        history = history.filter(h => !(h.dateVal === rawDate && h.locLabel === allLocsStr));
+        history.unshift(newRecord);
+        history = history.filter(h => h.timestamp >= new Date().getTime() - (7 * 24 * 60 * 60 * 1000));
+        localStorage.setItem('hojuu_download_history_fukasawa', JSON.stringify(history));
+        currentSelectedHistoryId = newRecord.id; renderHistoryTabs();
+    }
+
+    function renderHistoryTabs() {
+        const history = JSON.parse(localStorage.getItem('hojuu_download_history_fukasawa') || '[]');
+        const tabsContainer = document.getElementById('historyTabs'); const emptyEl = document.getElementById('historyEmpty'); const contentArea = document.getElementById('historyContentArea');
+        tabsContainer.innerHTML = '';
+        if (history.length === 0) { emptyEl.style.display = 'block'; contentArea.style.display = 'none'; currentSelectedHistoryId = null; return; }
+        emptyEl.style.display = 'none'; contentArea.style.display = 'block';
+        if (!currentSelectedHistoryId || !history.some(h => h.id === currentSelectedHistoryId)) { currentSelectedHistoryId = history[0].id; }
+
+        history.forEach((h) => {
+            const isActive = h.id === currentSelectedHistoryId; const d = new Date(h.dateVal); const weekDays = ['日', '月', '火', '水', '木', '金', '土']; const dayOfWeek = isNaN(d.getDay()) ? '' : weekDays[d.getDay()];
+            let displayDateStr = (h.dateVal && h.dateVal.length === 10) ? `${parseInt(h.dateVal.split('-')[1], 10)}/${parseInt(h.dateVal.split('-')[2], 10)}` : '日付不明';
+
+            const rowItem = document.createElement('div'); rowItem.className = `history-row-item ${isActive ? 'active' : ''}`;
+            rowItem.onclick = (e) => { if(e.target.tagName.toLowerCase() === 'button') return; currentSelectedHistoryId = h.id; renderHistoryTabs(); };
+            
+            rowItem.innerHTML = `<div class="history-item-text"><div class="history-item-label">・${displayDateStr}送信分（${dayOfWeek}）</div><div class="history-item-sub">（${h.locLabel}）</div></div>`;
+            
+            const delBtn = document.createElement('button'); delBtn.className = 'btn-history-del'; delBtn.textContent = '削除';
+            delBtn.onclick = (e) => { e.stopPropagation(); if(confirm(`履歴から削除しますか？`)) { let hArr = JSON.parse(localStorage.getItem('hojuu_download_history_fukasawa')); hArr = hArr.filter(item => item.id !== h.id); localStorage.setItem('hojuu_download_history_fukasawa', JSON.stringify(hArr)); if(currentSelectedHistoryId===h.id) currentSelectedHistoryId=null; renderHistoryTabs(); } };
+            rowItem.appendChild(delBtn); tabsContainer.appendChild(rowItem);
+        });
+        const activeRecord = history.find(h => h.id === currentSelectedHistoryId);
+        if (activeRecord) {
+            const d = new Date(activeRecord.dateVal); let displayDateStr = (activeRecord.dateVal && activeRecord.dateVal.length === 10) ? `${parseInt(activeRecord.dateVal.split('-')[1], 10)}/${parseInt(activeRecord.dateVal.split('-')[2], 10)}` : '不明';
+            document.getElementById('historyMetaTitle').textContent = `📋 送信履歴詳細: ${displayDateStr}`;
+            const tbody = document.getElementById('historyTableBody'); tbody.innerHTML = '';
+            Object.keys(activeRecord.details).forEach(locName => {
+                tbody.insertAdjacentHTML('beforeend', `<tr style="background-color: #e2e8f0;"><td colspan="3" style="text-align: left; font-weight: bold; color: #1e3a8a; padding-left: 5px;">📍 ${locName}</td></tr>`);
+                categoryMaster.forEach((cat) => {
+                    const catItems = activeRecord.details[locName].filter(item => item.categoryId === cat.id);
+                    if (catItems.length > 0) {
+                        const hojuuStr = catItems.filter(i => i.count > 0).map(i => i.count).join(',');
+                        const hikitoriStr = catItems.filter(i => i.count < 0).map(i => Math.abs(i.count)).join(',');
+                        tbody.insertAdjacentHTML('beforeend', `<tr><td style="text-align:left; font-weight:bold; padding-left:12px; color: #475569;">${cat.name}</td><td style="font-weight:bold; color:#1e3a8a;">${hojuuStr}</td><td style="font-weight:bold; color:#b91c1c;">${hikitoriStr}</td></tr>`);
+                    }
+                });
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
