@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>補充伝票取り込み（手動）/ 永井さん</title>
+    <title>補充伝票取り込み（手動）/ 上澤さん</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         html, body { overflow-x: hidden; position: relative; width: 100%; }
@@ -122,7 +122,7 @@
 <body>
 
 <div class="container">
-    <h1>補充伝票取り込み（手動）/ 永井さん</h1>
+    <h1>補充伝票取り込み（手動）/ 上澤さん</h1>
 
     <div class="meta-input-group">
         <div class="meta-row-date">
@@ -130,44 +130,14 @@
             <input type="date" id="inputDate">
         </div>
         <div class="meta-row-center">
-            <label for="inputm">📍 登録地:</label>
+            <label for="inputLocation">📍 登録地:</label>
             <select id="inputLocation" onchange="onChangeLocation()">
-           <option value="サンシン">サンシン</option>
-　　　　　　　<option value="ｳﾞｨﾚｯｼﾞVｲｵﾝﾓｰﾙ幕張">ｳﾞｨﾚｯｼﾞVｲｵﾝﾓｰﾙ幕張</option>
-　　　　　　　<option value="ｲｴﾛｰｻﾌﾞﾏﾘﾝ 千葉ﾎﾋﾞｰ">ｲｴﾛｰｻﾌﾞﾏﾘﾝ 千葉ﾎﾋﾞｰ</option>
-　　　　　　　<option value="mic by mellow">mic by mellow</option>
-　　　　　　　<option value="T・ｼﾞｮｲ蘇我">T・ｼﾞｮｲ蘇我</option>
-　　　　　　　<option value="ﾖﾄﾞﾊﾞｼ 千葉">ﾖﾄﾞﾊﾞｼ 千葉</option>
-　　　　　　　<option value="多田屋ｻﾝﾋﾟｱ">多田屋ｻﾝﾋﾟｱ</option>
-　　　　　　　<option value="ﾊﾟﾗﾎﾞﾗﾝﾄﾞ東金">ﾊﾟﾗﾎﾞﾗﾝﾄﾞ東金</option>
-　　　　　　　<option value="天然温泉　湯～ねる">天然温泉　湯～ねる</option>
-　　　　　　　<option value="海田酒店">海田酒店</option>
-　　　　　　　<option value="ﾌｧﾐﾘｰﾏｰﾄFC">ﾌｧﾐﾘｰﾏｰﾄFC</option>
-　　　　　　　<option value="ﾌｧﾐﾘｰﾏｰﾄ木更津金田東">ﾌｧﾐﾘｰﾏｰﾄ木更津金田東</option>
-　　　　　　　<option value="ｴﾌｪ ﾄｲﾊﾟﾗｽﾄｱ部">ｴﾌｪ ﾄｲﾊﾟﾗｽﾄｱ部</option>
-　　　　　　　<option value="千葉県立現代産業科学館">千葉県立現代産業科学館</option>
-　　　　　　　<option value="LOGUE ｼﾞｪｲﾎﾋﾞ">LOGUE ｼﾞｪｲﾎﾋﾞ</option>
-　　　　　　　<option value="ｱｿﾞﾝｲﾝﾀｰﾅｼｮﾅﾙ">ｱｿﾞﾝｲﾝﾀｰﾅｼｮﾅﾙ</option>
-　　　　　　　<option value="ｺｼﾞﾏ×ﾋﾞｯｸ習志野">ｺｼﾞﾏ×ﾋﾞｯｸ習志野</option>
-　　　　　　　<option value="ｾﾌﾞﾝｲﾚﾌﾞﾝ武蔵小金井駅東">ｾﾌﾞﾝｲﾚﾌﾞﾝ武蔵小金井駅東</option>
-　　　　　　　<option value="東武ｽﾄｱ船橋法典">東武ｽﾄｱ船橋法典</option>
-　　　　　　　<option value="ﾍﾞｲｼｱ 佐倉">ﾍﾞｲｼｱ 佐倉</option>
-　　　　　　　<option value="ﾍﾞｲｼｱ 東金">ﾍﾞｲｼｱ 東金</option>
-　　　　　　　<option value="ﾍﾞｲｼｱ 木更津金田">ﾍﾞｲｼｱ 木更津金田</option>
-　　　　　　　<option value="ｶｲﾝｽﾞ 市原">ｶｲﾝｽﾞ 市原</option>
-　　　　　　　<option value="ﾍﾟｯﾂﾜﾝ木更津金田">ﾍﾟｯﾂﾜﾝ木更津金田</option>
-　　　　　　　<option value="ｲｵﾝ 稲毛">ｲｵﾝ 稲毛</option>
-　　　　　　　<option value="ﾄｲｻﾞﾗｽ ﾍﾞﾋﾞｰｻﾞﾗｽ蘇我">ﾄｲｻﾞﾗｽ ﾍﾞﾋﾞｰｻﾞﾗｽ蘇我</option>
-　　　　　　　<option value="ﾀｲﾄｰFｽﾃｰｼｮﾝ市川妙典">ﾀｲﾄｰFｽﾃｰｼｮﾝ市川妙典</option>
-　　　　　　　<option value="WonderGOO 成東">WonderGOO 成東</option>
-　　　　　　　<option value="WonderGOO 茂原">WonderGOO 茂原</option>
-　　　　　　　<option value="WonderGOO 東金">WonderGOO 東金</option>
-　　　　　　　<option value="新星堂　ｲｵﾝﾓｰﾙ木更津">新星堂　ｲｵﾝﾓｰﾙ木更津</option>
+               <option value="ﾍﾞｲｼｱ 寄居北">ﾍﾞｲｼｱ 寄居北</option>
             </select>
         </div>
         <div class="meta-row-center">
             <label for="inputWorker">👤 作業者:</label>
-            <input type="text" id="inputWorker" value="永井(000031)" disabled>
+            <input type="text" id="inputWorker" value="上澤(000013)" disabled>
         </div>
     </div>
 
@@ -291,38 +261,8 @@
     document.addEventListener('touchend', (e) => { const now = (new Date()).getTime(); if (now - lastTouchEnd <= 300) { e.preventDefault(); } lastTouchEnd = now; }, false);
 
     const locationMaster = {
-       "サンシン": "001160",
-　　　　"ｳﾞｨﾚｯｼﾞVｲｵﾝﾓｰﾙ幕張": "002325",
-　　　　"ｲｴﾛｰｻﾌﾞﾏﾘﾝ 千葉ﾎﾋﾞｰ": "003164",
-　　　　"mic by mellow": "003828",
-　　　　"T・ｼﾞｮｲ蘇我": "004031",
-　　　　"ﾖﾄﾞﾊﾞｼ 千葉": "004205",
-　　　　"多田屋ｻﾝﾋﾟｱ": "004269",
-　　　　"ﾊﾟﾗﾎﾞﾗﾝﾄﾞ東金": "004282",
-　　　　"天然温泉　湯～ねる": "004853",
-　　　　"海田酒店": "004865",
-　　　　"ﾌｧﾐﾘｰﾏｰﾄFC": "004870",
-　　　　"ﾌｧﾐﾘｰﾏｰﾄ木更津金田東": "004946",
-　　　　"ｴﾌｪ ﾄｲﾊﾟﾗｽﾄｱ部": "005002",
-　　　　"千葉県立現代産業科学館": "006037",
-　　　　"LOGUE ｼﾞｪｲﾎﾋﾞ": "006087",
-　　　　"ｱｿﾞﾝｲﾝﾀｰﾅｼｮﾅﾙ": "007015",
-　　　　"ｺｼﾞﾏ×ﾋﾞｯｸ習志野": "014582",
-　　　　"ｾﾌﾞﾝｲﾚﾌﾞﾝ武蔵小金井駅東": "018004",
-　　　　"東武ｽﾄｱ船橋法典": "019008",
-　　　　"ﾍﾞｲｼｱ 佐倉": "020339",
-　　　　"ﾍﾞｲｼｱ 東金": "020352",
-　　　　"ﾍﾞｲｼｱ 木更津金田": "020363",
-　　　　"ｶｲﾝｽﾞ 市原": "021779",
-　　　　"ﾍﾟｯﾂﾜﾝ木更津金田": "022807",
-　　　　"ｲｵﾝ 稲毛": "056028",
-　　　　"ﾄｲｻﾞﾗｽ ﾍﾞﾋﾞｰｻﾞﾗｽ蘇我": "070189",
-　　　　"ﾀｲﾄｰFｽﾃｰｼｮﾝ市川妙典": "080053",
-　　　　"WonderGOO 成東": "087008",
-　　　　"WonderGOO 茂原": "087015",
-　　　　"WonderGOO 東金": "087043",
-　　　　"新星堂　ｲｵﾝﾓｰﾙ木更津": "092019"       
-    };
+       "ﾍﾞｲｼｱ 寄居北": "020333"
+           };
 
     const categoryMaster = [
         { id: "c1", name: "ｶｰﾄﾞﾀﾞｽ100", csvName: "ｶｰﾄﾞﾀﾞｽ100", group: "carddas" }, { id: "c2", name: "ｶｰﾄﾞﾀﾞｽ200", csvName: "ｶｰﾄﾞﾀﾞｽ200", group: "carddas" },
@@ -561,7 +501,7 @@
         const finalExportData = getAggregatedExportData();
         const rawDate = document.getElementById('inputDate').value;
         const dateStr = rawDate ? rawDate.replace(/-/g, '') : "日付不明";
-        const workerCodeStr = "000031";
+        const workerCodeStr = "000013";
         const payload = []; // GASに送るデータの配列
 
         // GAS用にデータを整形
